@@ -1,0 +1,5 @@
+{
+  "name": "BTC DCA Backtester",
+  "description": "A Bitcoin Dollar Cost Averaging (DCA) strategy backtesting tool using live historical data from CoinGecko.",
+  "requestFramePermissions": []
+}

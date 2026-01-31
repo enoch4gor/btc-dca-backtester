@@ -11,6 +11,7 @@ import TradeJournal from './components/TradeJournal';
 import ParticleBackground from './components/Background';
 import { format, isBefore, isAfter, isSameDay } from 'date-fns';
 import { Bitcoin, AlertCircle, Loader2, Info, Cpu, WifiOff } from 'lucide-react';
+import { LoginButton } from './components/LoginButton';
 
 // Helper to replace missing startOfDay from date-fns
 const startOfDay = (date: Date | number): Date => {
@@ -42,7 +43,7 @@ const App: React.FC = () => {
     frequency: Frequency.WEEKLY,
     dayOfWeek: 1, // Monday
     dayOfMonth: 1,
-    
+
     // Portfolio settings
     initialInvestment: 10000,
     enableKellyRebalance: false,
@@ -66,14 +67,14 @@ const App: React.FC = () => {
         setLoading(true);
         // Parallel fetch
         const [btcResult, fearGreedResult] = await Promise.all([
-            fetchBTCData(),
-            fetchFearAndGreedData()
+          fetchBTCData(),
+          fetchFearAndGreedData()
         ]);
 
         setRawData(btcResult.data);
         setIsFallback(btcResult.isFallback);
         setFearGreedRawData(fearGreedResult);
-        
+
         // Update end date to latest available if currently set to today
         if (btcResult.data.length > 0) {
           const lastDate = btcResult.data[btcResult.data.length - 1].date;
@@ -94,15 +95,15 @@ const App: React.FC = () => {
   // Derived State: Calculations
   const { timeline, stats } = useMemo(() => {
     if (rawData.length === 0) {
-       return { 
-         timeline: [], 
-         stats: { 
-           totalInvested: 0, finalPortfolioValue: 0, totalReturn: 0, percentageReturn: 0, 
-           tradesCount: 0, rebalanceCount: 0, currentBTCPrice: 0, finalCashBalance: 0, finalBTCValue: 0,
-           isLiquidated: false, liquidationDate: null,
-           finalBTCAmount: 0, averageEntryPrice: 0, currentFearGreed: null, durationDays: 0
-         }
-       };
+      return {
+        timeline: [],
+        stats: {
+          totalInvested: 0, finalPortfolioValue: 0, totalReturn: 0, percentageReturn: 0,
+          tradesCount: 0, rebalanceCount: 0, currentBTCPrice: 0, finalCashBalance: 0, finalBTCValue: 0,
+          isLiquidated: false, liquidationDate: null,
+          finalBTCAmount: 0, averageEntryPrice: 0, currentFearGreed: null, durationDays: 0
+        }
+      };
     }
     return calculateDCA(rawData, fearGreedRawData, config);
   }, [rawData, fearGreedRawData, config]);
@@ -110,18 +111,18 @@ const App: React.FC = () => {
   // Derived State: Filtered F&G Data
   const filteredFearGreed = useMemo(() => {
     if (fearGreedRawData.length === 0) return [];
-    
+
     const start = startOfDay(new Date(config.startDate));
     const end = startOfDay(new Date(config.endDate));
-    
+
     // We only want data that overlaps with the current strategy window
     return fearGreedRawData.filter(p => {
-        const d = startOfDay(new Date(p.date));
-        return (isAfter(d, start) || isSameDay(d, start)) && 
-               (isBefore(d, end) || isSameDay(d, end));
+      const d = startOfDay(new Date(p.date));
+      return (isAfter(d, start) || isSameDay(d, start)) &&
+        (isBefore(d, end) || isSameDay(d, end));
     }).map(p => ({
-        ...p,
-        dateStr: format(new Date(p.date), 'yyyy-MM-dd')
+      ...p,
+      dateStr: format(new Date(p.date), 'yyyy-MM-dd')
     }));
   }, [fearGreedRawData, config.startDate, config.endDate]);
 
@@ -132,11 +133,11 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen relative text-gray-100 overflow-hidden">
       <ParticleBackground />
-      
+
       {/* Decorative HUD Elements */}
       <div className="fixed top-0 left-0 w-64 h-64 border-l border-t border-tech-cyan/20 rounded-tl-3xl pointer-events-none" />
       <div className="fixed bottom-0 right-0 w-64 h-64 border-r border-b border-tech-cyan/20 rounded-br-3xl pointer-events-none" />
-      
+
       {/* Main Container - Reduced padding on mobile (p-2) for wider chart */}
       <div className="relative z-10 p-2 md:p-4 lg:p-6">
         {/* Header */}
@@ -152,16 +153,22 @@ const App: React.FC = () => {
               <h1 className="text-3xl font-display font-bold tracking-wider text-white glow-text uppercase">
                 BTC Strategy <span className="text-tech-cyan">HUD</span>
               </h1>
-              <div className="flex items-center gap-2 text-tech-cyan/60 text-xs font-mono tracking-widest uppercase">
-                <Cpu className="w-3 h-3" />
-                <span>System Online</span>
-                <span className="w-1 h-1 bg-tech-cyan rounded-full animate-pulse" />
-                <span>v2.5.0</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-tech-cyan/60 text-xs font-mono tracking-widest uppercase">
+                  <Cpu className="w-3 h-3" />
+                  <span>System Online</span>
+                  <span className="w-1 h-1 bg-tech-cyan rounded-full animate-pulse" />
+                  <span>v2.5.0</span>
+                </div>
+                <div className="md:hidden mt-2">
+                  <LoginButton />
+                </div>
               </div>
             </div>
           </div>
-          
-          <div className="hidden md:flex flex-col items-end">
+
+          <div className="hidden md:flex flex-col items-end gap-3">
+            <LoginButton />
             <div className="text-right">
               <span className="text-xs text-gray-500 font-mono block">MARKET STATUS</span>
               {isFallback ? (
@@ -223,54 +230,54 @@ const App: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              
+
               {/* Left Sidebar: Controls */}
               <div className="lg:col-span-3 xl:col-span-3">
-                <ControlPanel 
-                  config={config} 
-                  setConfig={setConfig} 
-                  minDate={minDate} 
-                  maxDate={maxDate} 
+                <ControlPanel
+                  config={config}
+                  setConfig={setConfig}
+                  minDate={minDate}
+                  maxDate={maxDate}
                 />
               </div>
 
               {/* Right Content: Charts & Stats */}
               <div className="lg:col-span-9 xl:col-span-9 space-y-6">
                 <StatsSummary stats={stats} />
-                
+
                 <div className="relative space-y-1">
-                   {/* Main Chart */}
-                   <div className="relative group">
-                       <div className="absolute -inset-0.5 bg-gradient-to-r from-tech-cyan to-tech-purple opacity-20 group-hover:opacity-40 transition duration-500 blur rounded-xl"></div>
-                       <div className="relative glass-panel rounded-xl overflow-hidden">
-                           {/* Removed chart overlay badge here */}
-                           <ResultsChart data={timeline} />
-                       </div>
-                   </div>
-                   
-                   {/* Fear & Greed Chart */}
-                   {filteredFearGreed.length > 0 && (
-                      <div className="relative group mt-6">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 to-green-500 opacity-10 group-hover:opacity-20 transition duration-500 blur rounded-xl"></div>
-                        <div className="relative">
-                          <FearGreedChart data={filteredFearGreed} />
-                        </div>
+                  {/* Main Chart */}
+                  <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-tech-cyan to-tech-purple opacity-20 group-hover:opacity-40 transition duration-500 blur rounded-xl"></div>
+                    <div className="relative glass-panel rounded-xl overflow-hidden">
+                      {/* Removed chart overlay badge here */}
+                      <ResultsChart data={timeline} />
+                    </div>
+                  </div>
+
+                  {/* Fear & Greed Chart */}
+                  {filteredFearGreed.length > 0 && (
+                    <div className="relative group mt-6">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 to-green-500 opacity-10 group-hover:opacity-20 transition duration-500 blur rounded-xl"></div>
+                      <div className="relative">
+                        <FearGreedChart data={filteredFearGreed} />
                       </div>
-                   )}
+                    </div>
+                  )}
                 </div>
 
                 <TradeJournal data={timeline} />
 
                 {/* Data disclaimer */}
                 <div className="text-center mt-12 mb-4">
-                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-gray-700/50">
-                      <div className={`w-2 h-2 rounded-full ${isFallback ? 'bg-yellow-500' : 'bg-green-500'} animate-pulse`}></div>
-                      <p className="text-[10px] text-gray-400 font-mono tracking-wider uppercase">
-                        {isFallback 
-                          ? "Source: Synthetic Generator [Demo]" 
-                          : "Source: Binance API [Live] • Alternative.me"}
-                      </p>
-                   </div>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-gray-700/50">
+                    <div className={`w-2 h-2 rounded-full ${isFallback ? 'bg-yellow-500' : 'bg-green-500'} animate-pulse`}></div>
+                    <p className="text-[10px] text-gray-400 font-mono tracking-wider uppercase">
+                      {isFallback
+                        ? "Source: Synthetic Generator [Demo]"
+                        : "Source: Binance API [Live] • Alternative.me"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
